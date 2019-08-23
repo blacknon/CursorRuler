@@ -28,11 +28,12 @@ st = 3000 if sublime.version() == '' else int(sublime.version())
 
 
 class CursorRuler(object):
+
     @classmethod
     def __draw_on_view(cls, view, active_view):
-        cursors        = active_view.sel()
-        em_width       = active_view.em_width()
-        view_size      = active_view.size()
+        cursors = active_view.sel()
+        em_width = active_view.em_width()
+        view_size = active_view.size()
         dynamic_rulers = []
 
         # Setup rulers for each cursor.
@@ -69,7 +70,7 @@ class CursorRuler(object):
             # It only matters when we're not at the end of the file.
 
             next_x = view.text_to_layout(cursor.b + 1)[0]
-            xpos   = cursor.xpos if st >= 3000 else cursor.xpos()
+            xpos = cursor.xpos if st >= 3000 else cursor.xpos()
 
             if xpos >= 0 and xpos < cur_x and cur_x > next_x and cursor.b < view_size:
                 if not cls.indent_subsequent_lines:
@@ -77,24 +78,27 @@ class CursorRuler(object):
                 else:
                     line = view.substr(view.line(cursor))
                     if line:
-                        line_length           = len(line)
-                        stripped_line_length  = len(line.lstrip())
+                        line_length = len(line)
+                        stripped_line_length = len(line.lstrip())
 
                         # We keep going if the line is not entirely whitespace.
                         if stripped_line_length > 0:
                             # We find out where the first non-whitespace
                             # character of the line is and we use its position.
-                            cur_row         = view.rowcol(cursor.b)[0]
-                            beginning_pos   = line_length - stripped_line_length
-                            beginning_point = view.text_point(cur_row, beginning_pos)
-                            cur_x           = view.text_to_layout(beginning_point)[0]
+                            cur_row = view.rowcol(cursor.b)[0]
+                            beginning_pos = line_length - stripped_line_length
+                            beginning_point = view.text_point(
+                                cur_row, beginning_pos)
+                            cur_x = view.text_to_layout(beginning_point)[0]
 
             # Get the cursor position in terms of columns.
-            cur_col = cur_x / em_width
+            # cur_col = cur_x / em_width
+            cur_col = cur_x / (em_width * 0.785)
 
             # Setup the current dynamic rulers to be included
             # with the static rulers.
-            dynamic_rulers += [cur_col + offset for offset in cls.cursor_rulers]
+            dynamic_rulers += [cur_col +
+                               offset for offset in cls.cursor_rulers]
 
         active_rulers = cls.rulers + dynamic_rulers
 
@@ -113,18 +117,18 @@ class CursorRuler(object):
         else:
             view.settings().set('rulers', active_rulers)
 
-
     # ..........................................................................
-
 
     @classmethod
     def __setup(cls):
         default_cursor_rulers = [-0.1, 0.2]
 
-        cls.rulers                  =      cls.editor_settings.get('rulers', [])
-        cls.indent_subsequent_lines = bool(cls.editor_settings.get('indent_subsequent_lines', True))
-        cls.cursor_rulers           =      cls.settings.get('cursor_rulers', default_cursor_rulers)
-        cls.synchronized            = bool(cls.settings.get('synchronized', True))
+        cls.rulers = cls.editor_settings.get('rulers', [])
+        cls.indent_subsequent_lines = bool(
+            cls.editor_settings.get('indent_subsequent_lines', True))
+        cls.cursor_rulers = cls.settings.get(
+            'cursor_rulers', default_cursor_rulers)
+        cls.synchronized = bool(cls.settings.get('synchronized', True))
 
         # Ensure the rulers settings are valid lists.
         if not isinstance(cls.rulers, list):
@@ -144,13 +148,13 @@ class CursorRuler(object):
         if sublime is None:
             ignored_packages = []
         else:
-            ignored_packages = sublime.load_settings('Preferences.sublime-settings').get('ignored_packages', [])
+            ignored_packages = sublime.load_settings(
+                'Preferences.sublime-settings').get('ignored_packages', [])
 
-        cls.enabled = 'CursorRuler' not in ignored_packages and bool(cls.settings.get('enabled', True))
-
+        cls.enabled = 'CursorRuler' not in ignored_packages and bool(
+            cls.settings.get('enabled', True))
 
     # ..........................................................................
-
 
     @classmethod
     def draw(cls, view):
@@ -166,35 +170,31 @@ class CursorRuler(object):
             # Draw the dynamic rulers for the current view.
             cls.__draw_on_view(view, view)
 
-
     # ..........................................................................
-
 
     @classmethod
     def init(cls):
         plugin_name = 'CursorRuler'
 
-        cls.editor_settings = sublime.load_settings('Preferences.sublime-settings')
-        cls.settings        = sublime.load_settings(plugin_name + '.sublime-settings')
+        cls.editor_settings = sublime.load_settings(
+            'Preferences.sublime-settings')
+        cls.settings = sublime.load_settings(plugin_name + '.sublime-settings')
 
         # In ST3 the `add_on_change()` was not implemented until build 3013.
         if st < 3000 or st >= 3013:
-            cls.editor_settings.add_on_change(plugin_name.lower() + '-reload', cls.__setup)
+            cls.editor_settings.add_on_change(
+                plugin_name.lower() + '-reload', cls.__setup)
             cls.settings.add_on_change('reload', cls.__setup)
 
         cls.__setup()
 
-
     # ..........................................................................
-
 
     @classmethod
     def is_enabled(cls, view):
         return cls.enabled and not view.settings().get('is_widget', False)
 
-
     # ..........................................................................
-
 
     @classmethod
     def reset(cls, view):
@@ -209,9 +209,7 @@ class CursorRuler(object):
             # Reset the current view.
             view.settings().set('rulers', cls.rulers)
 
-
     # ..........................................................................
-
 
     @classmethod
     def reset_all(cls):
@@ -226,6 +224,7 @@ class CursorRuler(object):
 
 
 class CursorRulerToggleCommand(sublime_plugin.TextCommand):
+
     def run(self, edit):
         if CursorRuler.is_enabled(self.view):
             # It's important that we turn off `enabled` before resetting.
@@ -245,6 +244,7 @@ class CursorRulerToggleCommand(sublime_plugin.TextCommand):
 
 
 class CursorRulerWrapLinesCommand(sublime_plugin.TextCommand):
+
     def run(self, edit):
         if CursorRuler.is_enabled(self.view):
             # Temporarily turn off CursorRuler.
@@ -266,6 +266,7 @@ class CursorRulerWrapLinesCommand(sublime_plugin.TextCommand):
 
 
 class CursorRulerListener(sublime_plugin.EventListener):
+
     def on_activated(self, view):
         if not view.is_loading() and CursorRuler.is_enabled(view):
             CursorRuler.draw(view)
@@ -291,10 +292,12 @@ class CursorRulerListener(sublime_plugin.EventListener):
 
     def on_selection_modified(self, view):
         # For some reason the `sublime` module is sometimes not available.
-        if sublime is None: return
+        if sublime is None:
+            return
 
         active_window = sublime.active_window()
-        if active_window is None: return
+        if active_window is None:
+            return
 
         # The view parameter doesn't always match the active view
         # the cursor is in.  This happens when there are multiple
@@ -305,7 +308,8 @@ class CursorRulerListener(sublime_plugin.EventListener):
         # created by the "New Window" command is empty.  When the
         # `close_windows_when_empty` user setting is true a non-empty
         # window can be left empty by closing its contained views.
-        if active_view is None: return
+        if active_view is None:
+            return
 
         if CursorRuler.is_enabled(active_view):
             CursorRuler.draw(active_view)
@@ -317,7 +321,8 @@ class CursorRulerListener(sublime_plugin.EventListener):
 # ------------------------------------------------------------------------------
 
 
-# In ST3 this will get called automatically once the full API becomes available.
+# In ST3 this will get called automatically once the full API becomes
+# available.
 def plugin_loaded():
     CursorRuler.init()
 
